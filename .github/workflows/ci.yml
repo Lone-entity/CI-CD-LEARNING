@@ -90,6 +90,9 @@ jobs:
           # Use the environment file path created by the setup action
           KUBECONFIG_FILE=$KUBECONFIG
 
+          # Define your dynamic ngrok proxy tunnel endpoint explicitly
+          TUNNEL_URL="https://caretaker-conform-antirust.ngrok-free.dev"
+
           # Dynamically set target container port based on the service name
           if [ "${{ matrix.service }}" = "frontend" ]; then
             TARGET_PORT=5000
@@ -99,15 +102,17 @@ jobs:
 
           # Update cluster config pointing explicitly to the isolated file path
           kubectl config set-cluster minikube \
-            --server=https://caretaker-conform-antirust.ngrok-free.dev \
+            --server=$TUNNEL_URL \
             --insecure-skip-tls-verify=true \
             --kubeconfig=$KUBECONFIG_FILE
 
-          # Run helm deployment passing the correct port variable and kubeconfig references
+          # Force Helm to use the tunnel endpoint instead of local internal loopbacks
           helm upgrade --install ${{ matrix.service }} ./microservice-chart \
+            --kubeconfig=$KUBECONFIG_FILE \
+            --kube-apiserver=$TUNNEL_URL \
+            --insecure-skip-tls-verify \
             --set serviceName=${{ matrix.service }} \
             --set image.repository=ghcr.io/${{ needs.build-and-push.outputs.repo_lower }}/${{ matrix.service }} \
             --set image.tag=${{ github.sha }} \
             --set containerPort=$TARGET_PORT \
-            --namespace=default \
-            --kubeconfig=$KUBECONFIG_FILE
+            --namespace=default
