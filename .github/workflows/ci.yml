@@ -87,20 +87,23 @@ jobs:
 
       - name: Deploy to Local Minikube via Helm Tunnel
         run: |
+          # Use the environment file path created by the setup action
           KUBECONFIG_FILE=$KUBECONFIG
 
-          # Dynamically use port 5000 for the frontend service configuration
+          # Dynamically set target container port based on the service name
           if [ "${{ matrix.service }}" = "frontend" ]; then
             TARGET_PORT=5000
           else
             TARGET_PORT=8080
           fi
 
+          # Update cluster config pointing explicitly to the isolated file path
           kubectl config set-cluster minikube \
-            --server=https://caretaker-conform-antirust.ngrok-free.dev\
+            --server=https://caretaker-conform-antirust.ngrok-free.dev \
             --insecure-skip-tls-verify=true \
             --kubeconfig=$KUBECONFIG_FILE
 
+          # Run helm deployment passing the correct port variable and kubeconfig references
           helm upgrade --install ${{ matrix.service }} ./microservice-chart \
             --set serviceName=${{ matrix.service }} \
             --set image.repository=ghcr.io/${{ needs.build-and-push.outputs.repo_lower }}/${{ matrix.service }} \
