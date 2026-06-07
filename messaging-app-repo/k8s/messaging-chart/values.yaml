@@ -1,0 +1,14 @@
+global:
+  registry: ghcr.io/https://github.com/Lone-entity/CI-CD LEARNING/messeging-app-repo
+services:
+  - {name: frontend, port: 5000}
+  - {name: api-gateway, port: 5001}
+  - {name: user-service, port: 5002}
+  - {name: contact-service, port: 5003}
+  - {name: chat-service, port: 5004}
+  - {name: group-service, port: 5005}
+  - {name: notification-service, port: 5006}
+  - {name: analytics-service, port: 5007}
+resources:
+  requests: {cpu: 50m}
+  limits: {cpu: 100m}

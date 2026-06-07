@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messaging App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex">
+    <div class="w-1/3 bg-white border-r flex flex-col">
+        <div class="bg-gray-200 h-16 flex items-center px-4 font-bold text-gray-700">Contacts & Groups</div>
+        <div class="p-2 border-b"><input type="text" placeholder="Search contacts" class="w-full p-2 rounded bg-gray-100 outline-none"></div>
+        <div class="flex-1 overflow-y-auto" id="contact-list">
+            <div class="p-4 border-b hover:bg-gray-50 cursor-pointer">
+                <div class="font-semibold">General Chat</div>
+                <div class="text-sm text-gray-500">Latest status update</div>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 flex flex-col bg-slate-50">
+        <div class="bg-gray-200 h-16 flex items-center px-4 font-bold text-gray-700">Active Chat</div>
+        <div class="flex-1 p-4 overflow-y-auto flex flex-col space-y-4" id="chat-window">
+            <div class="bg-white p-3 rounded-lg shadow-sm self-start max-w-md">Hello there</div>
+        </div>
+        <div class="bg-gray-200 p-4 flex items-center">
+            <input type="text" id="message-input" placeholder="Type a message" class="flex-1 p-2 rounded outline-none mr-2">
+            <button onclick="sendMessage()" class="bg-green-500 text-white px-4 py-2 rounded">Send</button>
+        </div>
+    </div>
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value;
+            if (!text) return;
+            document.getElementById('chat-window').innerHTML += `<div class="bg-green-100 p-3 rounded-lg shadow-sm self-end max-w-md">${text}</div>`;
+            input.value = '';
+            try {
+                await fetch('http://localhost:5001/api/chat/send', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senderId: 1, receiverId: 2, content: text })
+                });
+            } catch (e) { console.error(e); }
+        }
+    </script>
+</body>
+</html>

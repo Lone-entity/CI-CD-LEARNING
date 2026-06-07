@@ -1,0 +1,6 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata: { name: api-gateway-policy }
+spec:
+  endpointSelector: { matchLabels: { app: api-gateway } }
+  ingress: [ { toPorts: [ { ports: [ { port: "5001", protocol: TCP } ], rules: { http: [ {} ] } } ] } ]
