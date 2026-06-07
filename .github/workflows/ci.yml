@@ -48,4 +48,4 @@ jobs:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile
           push: true
-          tags: ghcr.io/${{ steps.string.outputs.repo_lower }}/$messaging-app-repo/${{ matrix.service }}:latest
+          tags: ghcr.io/${{ steps.string.outputs.repo_lower }}/${{ matrix.service }}:latest
