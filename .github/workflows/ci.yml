@@ -1,8 +1,8 @@
-name: Microservices CI
+name: Microservices CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-and-push:
@@ -12,7 +12,19 @@ jobs:
       packages: write
     strategy:
       matrix:
-        service: [api-gateway, user-service, contact-service, chat-service, group-service, notification-service, analytics-service, frontend]
+        service:
+          [
+            api-gateway,
+            user-service,
+            contact-service,
+            chat-service,
+            group-service,
+            notification-service,
+            analytics-service,
+            frontend,
+          ]
+    outputs:
+      repo_lower: ${{ steps.string.outputs.repo_lower }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -38,7 +50,51 @@ jobs:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile
           push: true
-          # Generates both the latest tag and a unique tag for tracking versions
           tags: |
             ghcr.io/${{ steps.string.outputs.repo_lower }}/${{ matrix.service }}:latest
             ghcr.io/${{ steps.string.outputs.repo_lower }}/${{ matrix.service }}:${{ github.sha }}
+
+  deploy-to-minikube:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          [
+            api-gateway,
+            user-service,
+            contact-service,
+            chat-service,
+            group-service,
+            notification-service,
+            analytics-service,
+            frontend,
+          ]
+    steps:
+      - name: Checkout code (For Helm Chart)
+        uses: actions/checkout@v3
+
+      - name: Set up Kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBERNETES_KUBECONFIG }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: "v3.12.0"
+
+      - name: Deploy to Local Minikube via Helm Tunnel
+        run: |
+          # Connects to your active local ngrok tunnel proxy endpoint
+          # Change the URL below to match your live ngrok URL
+          kubectl config set-cluster minikube --server= https://caretaker-conform-antirust.ngrok-free.dev
+
+          # Upgrades or installs each service dynamically using your single chart template
+          helm upgrade --install ${{ matrix.service }} ./microservice-chart \
+            --set serviceName=${{ matrix.service }} \
+            --set image.repository=ghcr.io/${{ needs.build-and-push.outputs.repo_lower }}/${{ matrix.service }} \
+            --set image.tag=${{ github.sha }} \
+            --set containerPort=8080 \
+            --namespace=default
