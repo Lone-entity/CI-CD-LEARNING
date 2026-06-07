@@ -87,11 +87,9 @@ jobs:
 
       - name: Deploy to Local Minikube via Helm Tunnel
         run: |
-          # Connects to your active local ngrok tunnel proxy endpoint
-          # Change the URL below to match your live ngrok URL
-          kubectl config set-cluster minikube --server= https://caretaker-conform-antirust.ngrok-free.dev
+          # Added 'minikube' as the cluster name and allowed insecure TLS for the proxy tunnel
+          kubectl config set-cluster minikube --server=https://caretaker-conform-antirust.ngrok-free.dev --insecure-skip-tls-verify=true
 
-          # Upgrades or installs each service dynamically using your single chart template
           helm upgrade --install ${{ matrix.service }} ./microservice-chart \
             --set serviceName=${{ matrix.service }} \
             --set image.repository=ghcr.io/${{ needs.build-and-push.outputs.repo_lower }}/${{ matrix.service }} \
