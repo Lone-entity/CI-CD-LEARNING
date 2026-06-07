@@ -2,27 +2,17 @@ name: Microservices CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Required to push to GitHub Packages (ghcr.io)
+      packages: write
     strategy:
       matrix:
-        service:
-          [
-            api-gateway,
-            user-service,
-            contact-service,
-            chat-service,
-            group-service,
-            notification-service,
-            analytics-service,
-            frontend,
-          ]
+        service: [api-gateway, user-service, contact-service, chat-service, group-service, notification-service, analytics-service, frontend]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -48,4 +38,7 @@ jobs:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile
           push: true
-          tags: ghcr.io/${{ steps.string.outputs.repo_lower }}/${{ matrix.service }}:latest
+          # Generates both the latest tag and a unique tag for tracking versions
+          tags: |
+            ghcr.io/${{ steps.string.outputs.repo_lower }}/${{ matrix.service }}:latest
+            ghcr.io/${{ steps.string.outputs.repo_lower }}/${{ matrix.service }}:${{ github.sha }}
